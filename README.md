@@ -170,6 +170,25 @@ git push -u origin main
 
 `-u` sets the upstream so later syncs are just `git push` / `git pull`.
 
+## Related repos
+
+Not everything belongs in a Stow package. Some configs are self-contained enough to be
+their own repo, cloned straight into place rather than symlinked:
+
+| Repo | Lives at | What it is |
+|------|----------|------------|
+| `lj.workspaces` (private) | `~/.config/omarchy/plugins/lj.workspaces` | Omarchy shell bar widget showing per-monitor workspace indicators. A git repo in place — commit and push from that directory, no stow involved. |
+
+The two are linked: the widget filters workspaces by monitor, but the actual per-monitor
+pinning comes from the `hl.workspace_rule` entries in `hypr/.config/hypr/workspaces.lua`
+**in this repo**. Restoring one without the other gives a widget with nothing to filter.
+The bar also has to reference the plugin via `{ "id": "lj.workspaces" }` in
+`~/.config/omarchy/shell.json`.
+
+**Not currently backed up:** `~/.config/omarchy/shell.json` itself — bar layout, widget
+order, and idle/lock timeouts. Worth adding as a Stow package if it ever gets customised
+much further.
+
 ## Notes
 
 - Stow refuses to overwrite real files. On a conflict, move the existing file aside or use
