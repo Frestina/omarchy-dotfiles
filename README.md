@@ -218,13 +218,29 @@ that. It copies the live file **into** the repo first (the live file holds the n
 settings), then re-stows, and sends a desktop notification. It never commits, so review with
 `git diff` afterwards — and if the change was an accident, `git checkout -- <file>` undoes it.
 
-Those two events are the only relevant ones Omarchy offers; there is no hook that fires when
-the shell writes its config, so breakage mid-session isn't repaired until the next boot or
-update. To check by hand at any time:
+Those two events are the only relevant ones Omarchy offers — nothing fires when the shell
+writes its config — so a systemd user path unit covers the gap and repairs breakage within
+seconds, without waiting for a reboot:
+
+```
+omarchy/.config/systemd/user/relink-omarchy-dotfiles.path      # watches the two files
+omarchy/.config/systemd/user/relink-omarchy-dotfiles.service   # runs the same script
+```
+
+It can't loop: once the script re-stows, the watched path is a symlink again and the next
+trigger does nothing. Enable it on a new machine with:
+
+```bash
+systemctl --user daemon-reload
+systemctl --user enable --now relink-omarchy-dotfiles.path
+```
+
+To check or repair by hand at any time:
 
 ```bash
 ls -l ~/.config/omarchy/shell.json     # should show '->' into dotfiles
 cd ~/dotfiles && stow -R omarchy       # repair
+systemctl --user status relink-omarchy-dotfiles.path
 ```
 
 ## Notes

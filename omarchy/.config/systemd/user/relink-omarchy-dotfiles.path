@@ -1,0 +1,13 @@
+[Unit]
+Description=Watch for Omarchy shell config replacing its stow symlink
+Documentation=https://github.com/Frestina/omarchy-dotfiles
+
+[Path]
+# The shell writes these atomically (temp file + rename), which replaces the
+# stow symlink with a real file. Watching the files catches that within seconds.
+PathChanged=%h/.config/omarchy/shell.json
+PathChanged=%h/.config/omarchy/shell.toml
+Unit=relink-omarchy-dotfiles.service
+
+[Install]
+WantedBy=default.target

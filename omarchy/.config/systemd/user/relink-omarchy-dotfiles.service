@@ -1,0 +1,9 @@
+[Unit]
+Description=Re-link Omarchy config files into the dotfiles repo
+# The script is a no-op unless a real file sits where a symlink belongs, so
+# re-running it costs nothing and it cannot loop: after it re-stows, the
+# watched path is a symlink again and the next trigger does nothing.
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/omarchy/hooks/post-boot.d/relink-omarchy-dotfiles
