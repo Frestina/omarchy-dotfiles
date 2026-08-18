@@ -1,0 +1,60 @@
+#!/bin/bash
+# Re-link the stow-managed Omarchy config files if something replaced the
+# symlinks with real files.
+#
+# Why this is needed: the Omarchy shell writes shell.json atomically (write a
+# temp file, rename over the target). A rename replaces a symlink instead of
+# following it, so any shell settings write, an `omarchy refresh shell`, or an
+# update migration silently turns ~/.config/omarchy/shell.json back into a real
+# file and the dotfiles repo stops tracking it.
+#
+# Direction matters: when the link is broken the LIVE file holds the newest
+# settings, so it is copied INTO the repo before re-linking. Copying the other
+# way would discard whatever the shell just wrote.
+#
+# This deliberately does not commit. Changes are left in the working tree so
+# they can be reviewed with `git diff` — and if the change was unwanted (an
+# accidental `omarchy refresh shell`, say), `git checkout -- <file>` puts the
+# old version back.
+
+DOTFILES="$HOME/dotfiles"
+PACKAGE="omarchy"
+FILES=(shell.json shell.toml)
+
+[[ -d "$DOTFILES/$PACKAGE" ]] || exit 0
+command -v stow >/dev/null 2>&1 || exit 0
+
+relinked=()
+
+for f in "${FILES[@]}"; do
+  live="$HOME/.config/omarchy/$f"
+  repo="$DOTFILES/$PACKAGE/.config/omarchy/$f"
+
+  # Only act on a real file sitting where a symlink belongs.
+  if [[ -L "$live" ]] || [[ ! -f "$live" ]] || [[ ! -f "$repo" ]]; then
+    continue
+  fi
+
+  if cmp -s "$live" "$repo"; then
+    # Same content, so nothing to preserve — just drop it and re-link.
+    rm -f -- "$live"
+  else
+    cp -- "$live" "$repo" || continue
+    rm -f -- "$live"
+  fi
+
+  relinked+=("$f")
+done
+
+if (( ${#relinked[@]} )); then
+  stow -d "$DOTFILES" -t "$HOME" -R "$PACKAGE"
+
+  if command -v notify-send >/dev/null 2>&1; then
+    notify-send "Dotfiles re-linked" \
+      "Restored stow symlink for: ${relinked[*]}. Review with: cd ~/dotfiles && git diff"
+  fi
+
+  logger -t relink-omarchy-dotfiles "re-linked: ${relinked[*]}" 2>/dev/null
+fi
+
+exit 0

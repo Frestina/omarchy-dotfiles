@@ -206,6 +206,27 @@ idle/lock timeouts, and which shell plugins are enabled) and `shell.toml` (font 
 Those two files are linked individually — see below — so the rest of
 `~/.config/omarchy/`, including the plugin repo, stays local.
 
+### Guarding against broken symlinks
+
+The Omarchy shell writes `shell.json` **atomically** — it writes a temp file and renames it
+over the target. A rename replaces a symlink rather than following it, so a settings change,
+an `omarchy refresh shell`, or an update migration turns the file back into a real one and
+this repo silently stops tracking it.
+
+`omarchy/.config/omarchy/hooks/{post-boot,post-update}.d/relink-omarchy-dotfiles` repairs
+that. It copies the live file **into** the repo first (the live file holds the newest
+settings), then re-stows, and sends a desktop notification. It never commits, so review with
+`git diff` afterwards — and if the change was an accident, `git checkout -- <file>` undoes it.
+
+Those two events are the only relevant ones Omarchy offers; there is no hook that fires when
+the shell writes its config, so breakage mid-session isn't repaired until the next boot or
+update. To check by hand at any time:
+
+```bash
+ls -l ~/.config/omarchy/shell.json     # should show '->' into dotfiles
+cd ~/dotfiles && stow -R omarchy       # repair
+```
+
 ## Notes
 
 - Stow refuses to overwrite real files. On a conflict, move the existing file aside or use
