@@ -30,6 +30,22 @@ under `~`:
 The package name itself never appears in the symlink path — it only exists so packages can be
 stowed and unstowed independently.
 
+A package doesn't have to own a whole directory. Include just the files you want and Stow
+links only those, leaving everything else in the target directory alone:
+
+```
+~/dotfiles/
+└── omarchy/
+    └── .config/omarchy/
+        ├── shell.json          -> ~/.config/omarchy/shell.json
+        └── shell.toml          -> ~/.config/omarchy/shell.toml
+```
+
+This works because `~/.config/omarchy/` already exists as a real directory. Stow only
+swallows a directory whole when the target **doesn't** exist yet (see the folding note
+below), so here it descends and links the two files individually. Check with
+`stow -n -v <name>` if unsure — it prints one `LINK:` line per symlink it would create.
+
 ## Setup on a new machine
 
 ```bash
@@ -185,9 +201,10 @@ pinning comes from the `hl.workspace_rule` entries in `hypr/.config/hypr/workspa
 The bar also has to reference the plugin via `{ "id": "lj.workspaces" }` in
 `~/.config/omarchy/shell.json`.
 
-**Not currently backed up:** `~/.config/omarchy/shell.json` itself — bar layout, widget
-order, and idle/lock timeouts. Worth adding as a Stow package if it ever gets customised
-much further.
+The `omarchy` package covers `~/.config/omarchy/shell.json` (bar layout, widget order,
+idle/lock timeouts, and which shell plugins are enabled) and `shell.toml` (font size).
+Those two files are linked individually — see below — so the rest of
+`~/.config/omarchy/`, including the plugin repo, stays local.
 
 ## Notes
 
