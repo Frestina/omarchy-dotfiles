@@ -194,6 +194,7 @@ their own repo, cloned straight into place rather than symlinked:
 | Repo | Lives at | What it is |
 |------|----------|------------|
 | `lj.workspaces` (private) | `~/.config/omarchy/plugins/lj.workspaces` | Omarchy shell bar widget showing per-monitor workspace indicators. A git repo in place — commit and push from that directory, no stow involved. |
+| `lj.lock` (private) | `~/.config/omarchy/plugins/lj.lock` | Omarchy session lock screen, cloned from `omarchy.lock`. Keeps the displays powered while locked (DPMS-off crashes Quickshell on this machine's NEC monitors) and suspends after an hour of inactivity at the lock screen. Same arrangement — a git repo in place, no stow. |
 
 The two are linked: the widget filters workspaces by monitor, but the actual per-monitor
 pinning comes from the `hl.workspace_rule` entries in `hypr/.config/hypr/workspaces.lua`
@@ -201,10 +202,15 @@ pinning comes from the `hl.workspace_rule` entries in `hypr/.config/hypr/workspa
 The bar also has to reference the plugin via `{ "id": "lj.workspaces" }` in
 `~/.config/omarchy/shell.json`.
 
+`lj.lock` is linked to this repo the same way: the plugin is inert until `shell.json`
+enables it (`plugins`, `disabledPlugins`, `cloneSourceRestores`) and sets
+`idle.suspendAfterLock`. That key is read by the clone alone — on the stock lock plugin
+it does nothing at all.
+
 The `omarchy` package covers `~/.config/omarchy/shell.json` (bar layout, widget order,
 idle/lock timeouts, and which shell plugins are enabled) and `shell.toml` (font size).
 Those two files are linked individually — see below — so the rest of
-`~/.config/omarchy/`, including the plugin repo, stays local.
+`~/.config/omarchy/`, including both plugin repos, stays local.
 
 ### Guarding against broken symlinks
 
