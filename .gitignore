@@ -1,1 +1,5 @@
 .DS_Store
+
+# Editor/tool backups, e.g. autostart.lua.bak.1787329399
+*.bak
+*.bak.*
