@@ -1,0 +1,19 @@
+#!/bin/bash
+# Fake fullscreen for the YouTube web app.
+#
+# When YouTube goes fullscreen Hyprland would normally blow the window up to
+# cover the monitor. Re-dispatch the state instead as internal=0 (window stays
+# in its tile) / client=2 (YouTube still believes it is fullscreen, so it keeps
+# the big player UI). Started from hypr/autostart.lua.
+
+CLASS="brave-youtube.com__-Default"
+SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+
+socat -U - "UNIX-CONNECT:$SOCKET" | while IFS= read -r event; do
+  # fullscreen>>1 carries no window address, so ask which window has focus.
+  # The reply below emits fullscreen>>0, never >>1, so it cannot retrigger us.
+  [[ "$event" == "fullscreen>>1" ]] || continue
+  [[ "$(hyprctl activewindow -j | jq -r '.class // ""')" == "$CLASS" ]] || continue
+
+  hyprctl dispatch 'hl.dsp.window.fullscreen_state({ internal = 0, client = 2 })' >/dev/null
+done
